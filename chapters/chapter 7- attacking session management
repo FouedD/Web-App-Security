@@ -1,0 +1,55 @@
+* Try to decode the session cookie using different algorithms (base64, hex, xor,...). Start by decoding the entire cookie then decode every part aside; the cookie may be devided to parts and each part may be decoded using a different algorithm.
+Decode the whole cookie using one algorithm and then see if there is a part that makes sense.
+
+* The application may validate only a part of a cookie. This reduces the entropy and enhances the brute force attack. Try to change one byte at a time, and even one bit and exclude those that don't affect the cookie.
+
+* When the application offers a registration functionality, try to register using probably similar usernames such as "A", "AAAA", and "AAAABBB" and check the session cookie. Also, if there is a block that contains only integers it may be hex encoded.
+
+* When reviewing a code, try to see how the cookies (session cookie) are created.
+
+* Cookies may be ECB ciphers. The ECB cipher is composed of blocks of 16 characters. The plaintext is encrypted in a way that every 8 bytes are encrypted using the same key. For example:
+
+If we consider the plaintext form of a session cookie:  "rnd=2458992;app=iTradeEUR_1;uid=218;username=dafydd;time=634430423694715000;"  
+The ECB encrypted form is :
+"68BAC980742B9EF80A27CBBBC0618E3876FF3D6C6E6A7B9CB8FCA486F9E11922776F0307329140AABD223F003A8309DDB6B970C47BA2E249A0670592D74BCD07D51A3E150EFC2E69885A5C8131E4210F"
+
+Then we get this : 
+
+rnd=2458 68BAC980742B9EF8
+992;app= 0A27CBBBC0618E38
+iTradeEU 76FF3D6C6E6A7B9C
+R_1;uid= B8FCA486F9E11922
+218;user 776F0307329140AA
+name=daf BD223F003A8309DD
+ydd;time B6B970C47BA2E249
+=6344304 A0670592D74BCD07
+23694715 D51A3E150EFC2E69
+000; 885A5C8131E4210F
+
+If we take the second cipher and we put it after the 5th, uid will get 992 after being decrypted in the server level.
+
+So, for testing, we have to divide the cookie into blocks of 16 bytes. Then, we have to change the position of each block and send the cookie.
+
+* Other cookies are encrypted in a way that we obtain CBC ciphers. In CBC cipher encryption, each block is xored to the preceding block so that we don't obtain a pattern. To attack this, we change each character at a time so that the decrypted values will be something like this :
+	rnd=191432758301????????nkProdUC;uid=216;time=6343303;
+	rnd=191432758301;app=eBa????????;uie=216;time=6343303;
+	rnd=191432758301;app=eBa????????;uid=226;time=6343303;
+
+If the application checks all the decrypted value, this won't work; but if it checks only a part of the decrypted value (uid for example), this technique works. 
+Burp intruder can be used to test this in the following way:
+	- we send the request (containing the token) to intruder. Preferebly, the response to this request should contain something that identifies the user.
+	- we select the value of the token
+	- In Payload type, we choose "Bit flipper"
+	- we choose "Literal value" or "Encoded as ASCII hex" in the Format of original data
+
+* Create users with different username lenghts and see if the token is increased by 8 or 16 bytes at every increase of 1 character.
+
+* Verify if the application contains pages accessible using HTTP or port 80 is open, a service is listening to it and when visiting it the session cookie is transmitted. Also, verify if the application uses external resources served using HTTP and the session cookie is transmitted when trying to access these resources.
+
+* Logout from the application and reuse the cookie to access a resource accessible only after authentication. If the resource is accessible, the application does not end the session well.
+
+* Authenticate and access the login page using the cookie. If the application takes you there, authenticate using the same cookie and a different user. If a new token is not issued, the application is vulnerable to session fixation attack.
+
+* Invent a token having the same format of the session cookie and send it within the authentication process. If the application uses it as a session, it is vulnerable to session fixation attack.
+
+* Check the domain attribute within cookies (set-cookie: ....; domain=..). The default one is the hostname of the application being pentested. If the application is www.example.com and the session cookie is created having domain=example.com then every subdomain of example.com will be able to receive the session cookie of www.example.com
