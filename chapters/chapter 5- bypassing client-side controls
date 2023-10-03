@@ -1,0 +1,9 @@
+* Tokens (cookies, anti-csrf, ...) : the application may use encrypted tokens. Example: encrypting the price of a product. The encryption algorithm may be a hash so that we can't decrypt it. These techniques may be used :
+	- Use the token of another product
+	- Use another token in another page
+	- Search for the page that generates these tokens
+	- Change the value of the token and its length to see if there is a verbose message that reveals the encryption algorithm.
+
+* When the server response is 304, it means that the resource was cached and the response was done by the browser. If we want to get fresh resources, we remove the request headers "If-Modified-Since" and "If-None-Match".
+
+* Sometimes there may be disabled elements in a form. These elements will not be sent to the application, and thus will not appear in the proxy interface. For that, we have to manually inspect and check the source code of the forms, and if we find an element of this kind, we change disabled to false (or delete it completely).
