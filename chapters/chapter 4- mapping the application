@@ -1,0 +1,24 @@
+* This website "https://web.archive.org/" contains archives of many websites, which mean we can search for snapshots of a website taken in the past, browse it and try to see the differences between it and the new version of the website we are testing.
+
+* Read the html files and javascript files since they may contain functions that hide some urls or comments.
+
+* Try to identify the pattern that the naming of the directories and web pages follow. For example every page behind the /auth directory starts with a capital letter; then use a wordlist that respects this pattern.
+
+* If there is a page /auth/ForgotPassword, use burp intruder with a wordlist like /auth/ResetPassword, /auth/GetPassword, /auth/SetPassword, /auth/RetrievePassword, /auth/UpdatePassword, /auth/ViewPassword, /auth/EditPassword, /auth/RemovePassword, /auth/UpdateP ...
+
+* For all pages and files identified in the app, change the extension of each one to .tmp, .java, .php~1, .bak, .cs
+
+* Use google dorks for advanced research. For example 'site:www.example.com' will return every resource of www.example.com , 'site:www.example.com login' will return all the resources that contain the word login, 'link:www.example.com' returns all pages on other websites that contain a link to www.example.com
+and 'related:www.example.com' returns pages that discuss the target on other sites.
+
+* Try these 2 parameters : debug=true and diagnostic=true (or on) and debug=1 and diagnostic=1. Those are debug parameters. Other variables of this type are source, test ... So the idea here is to search for the debug parameters of the language. For the POST method, try these variables in the body and in the URL at the same time.
+!! Use the parameters of the POST method in both the body and URL, make their values equivalent and not equivalent as a second test.
+
+* For Rest-style applications, the parameters are in the URL. Do not ignore to test them. Also change normal looking URLs into Rest-style ones.
+
+* As web applications differ from device to another (mobile, laptop), we can try to change User-agent header to a mobile device and see the application behavior. Set a wordlist of User-agents and use Burp intruder.
+
+* For Rest-style URLs, example http://www.example.com/pub/media/12/view , try to think like this: the last URL is equivalent to this: http://www.example.com/manager?schema=pub&type=media&id=12&action=view
+So try to inject into every variable and try to change view into other actions like add (which will make us able to create  a page with some data in it), edit ...
+
+* Try to take note of the value of the Referer header because the specified URL reveals info about parameters.
