@@ -1,0 +1,11 @@
+* If there is an account lockout, if the application issues cookies after each login attempt, try to use different cookies for every single login attempt.
+
+* If the account is locked out, see whether submitting the valid password causes any difference in the application’s behavior compared to an invalid password. If so, you can continue a password-guessing attack even if the account is locked out.
+
+* Application user registration and change password forms may be used to enumerate users (especially if the application does not allow username duplication). Also, the response timing may help in the enumeration (try to change cookies at each attempt to avoid responses from cache).
+
+* When changing the password functionality is only accessible after authentication and there is not a username field, try to send the request after adding a username field. The username field should have the same name as the one in the login form.
+
+* The answers to the forget password challenges may be bruteforcible. The attempts in this case may be unlimited.
+
+* Try to remove the parameters sent to the app. Try to send an empty request.
