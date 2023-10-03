@@ -1,0 +1,13 @@
+* Always try to access the links that are accessed by a user A using another user B who does not have access to.
+
+* Send requests that are only allowed by a user A using a user B and change the HTTP method: if it's POST, use GET and HEAD.
+
+* Access control may be based on the Referer header: an application checks if an admin functionality is allowed when it is visited after visiting the admin menu.
+
+* Burp contains a functionality that compares the site map differences between content that was accessed in different user contexts. In the Target menu, select a branch, right click and choose "compare site maps". The first site map must be performed using a user account and the second site map must be performet using another account. 
+
+* Burp allows to test functionalities visited by a user A with the session of a user B : 
+	- Authenticate using user A and visit all items (or the ones I need). 
+	- Then authenticate using a user B. 
+	- Go to history, right click on the request and choose "Request in browser" > "In current session"
+	- Copy the URL to the browser and enter. You will see the result of the query in the browser and in burp history.
