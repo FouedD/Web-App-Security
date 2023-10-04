@@ -1,0 +1,3 @@
+* The application uses trust relationships between tiers, that's why sometimes access controls are implemented by one tier and not checked by others.
+
+* The path traversal is usually found in country, lang, ... parameters 
