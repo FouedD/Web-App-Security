@@ -1,0 +1,27 @@
+* Check for functionalities in the app where encrypted tokens are decrypted and they are revealed in plaintext. For example: if the app decrypts a cookie to extract the username from it and allows the user to set the plain value of that cookie, try to replace this cookie with the session cookie and see if the app returns its plain value.
+
+* Sometimes, the change password functionality may be treated by the same script for admins and normal users. However, the admin has not to submit the old password. So when testing, try to eliminate a parameter at each time for every request (cookies, parameters, headers, ...)
+
+* If a functionality requires many steps (example 4) :
+		- Jump from step 2 to 4 and see the behavior of the app.
+		- Try to change the sequence of steps of the stage.
+		- Repeat a step multiple times //example step 2
+		- If parameters are used in step one only, try reusing them with a different value in the other steps.
+		- If the app uses parameters with a user A that are not used by another one, try using them with this latter.
+
+* If the application has a functionality that allows an authenticated user to register for something based on the information he enters, try to submit info about another user because the object that saves this info may be used to rewrite the one of the session cookie.
+
+* Try negative values for parameters (numeric ones). The negative value may verify the threshold check but bypass the condition.
+
+* Another example, if the app makes a discount based on the number of products on the list, try to add the maximum number of products in the list and after the discount, delete them to see if the discount is still.
+!! It's all about algorithms. Understand the algorithm and then test.
+
+* Sometimes developers may escape bad characters such as ; | ... by appending them with a backslash (\) and they may forget to escape the backslash itself. So add a backslash to the payloads.
+
+* For SQL injection, try these payloads :
+	-  ''''''''''''''''''''' and so on  + try even and odd numbers of '
+	- a''''''''''''''''''''' and so on + ...
+because the application may implement a check mechanism on the length of the string entered.
+
+* Test for race conditions by doing this: example for the login functionality, try to launch burp sequencer to let the application perform authentication multiple times and try to authenticate using another account.
+Repeat this multiple times. The vulnerability occurs when we get authenticated to the home page of the user who is behind burp sequencer.
