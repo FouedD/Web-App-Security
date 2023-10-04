@@ -1,0 +1,6 @@
+* Sometimes, the application may only be accessible by using a specific SSL certificate or another means of authentication. So, Burp proxy may not be helpful. The alternative here is to use a browser extension like Tamper Data in Firefox.
+
+* The tool Stunnel allows any other tool to send data using any protol over HTTPS. It does this by creating a socket on a specified port of the local loopback interface and when a connection is received by another tool, it performs SSL negotiation with the target and forwards the traffic of the tool through the SSL tunnel :
+	stunnel -c -d localhost:88 -r target-website:443
+
+The other tool now must point on port 88 of the loopback interface.
