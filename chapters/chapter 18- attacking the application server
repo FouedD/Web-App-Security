@@ -1,0 +1,30 @@
+* When sending a request as GET having parameters in the URL and the application denies it, try to send it with HEAD or POST.
+
+* After mapping the application, make a request to each directory in order to find a directory listing. Try to request index.html within each directory.
+Also, try different HTTP methods within each request.
+
+* Try these HTTP methods also:
+	- COPY copies the specified resource to the location given in the Destination header.
+	- MOVE moves the specified resource to the location given in the Destination header.
+	- SEARCH searches a directory path for resources.
+	- PROPFIND retrieves information about the specified resource, such as author, size, and content type.
+
+* When testing for network or port enumeration in the Host or the first HTTP request line, 
+	GET http://wahh-otherapp.com:80/ HTTP/1.0
+and it is blocked, try to use the HTTP method CONNECT and in the Host check 127.0.0.1, external and internal websites and addresses :
+	CONNECT wahh-otherapp.com:443 HTTP/1.0
+  
+!! Bear in mind that CONNECT method only allows port 443. CONNECT may work when the application server is configured to act as a proxy
+
+* When sending a request, try to URL encode the character ? (which gives %3f). This may be interpreted by one server component and not by another. In the past it allowed a directory listing. So, use %3f and ? in these locations:
+	- After the name of a directory
+	- After the name of a file
+
+* When checking for path traversal, try this payload: ..%c0%af..%c0%af..%c0%af..%c0%af../etc/passwd and also don't restrict the research on file /etc/passwd only, look for /var/log/syslog and others.
+
+* When you are not authorized to access certain resources (example http://web/archive/sys.proc), try the following :
+	- Add "" in the name of the resource. Example http://web/archive/"sys".proc
+	- Add %0A, %20, %0D before the name of the resource. Example http://web/archives/%0A.proc and at the end of the value of the cookie.
+
+* When fuzzing a parameter, submit it in GET, in the body of POST and in the URL of a POST. Also submit it as a cookie:
+Cookie: foo=value;jsessionid=blablabla
