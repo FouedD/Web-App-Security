@@ -1,0 +1,57 @@
+* When mapping the application, try browsing it with JavaScript enabled and disabled, and with cookies enabled and disabled.
+
+* Use Google dorks site: and link:. site:website displays all the resources of website and link: dispalys other sites that link to it.
+
+* Always pay attention to naming conventions such as when you find AddDocument.jsp, look for EditDocument.jsp, ViewDocument.jsp, RemoveDocuments.jsp ...
+
+* Never forget to replace Host header with the IP address.
+
+* Use listings of common debug parameter names (such as debug, test, hide, and source) and common values (such as true, yes, on, and 1).  //Use cluster bomb of Burp intruder.
+
+* Check if the session cookie may be sent through GET. This can enable an attacker to send the URL with a valid session to victim.
+
+*  File upload functions may be vulnerable to path traversal and Contact Us functions may be vulnerable to SMTP injection.
+
+* Never forget to test for username uniqueness when the application allows registration.
+
+* Test for registration by searching for it in the JavaScript files and using a custom request.
+
+* Use a strong password and attempt to login each time by eliminating a special character, changing a character's case, ...
+
+* When the application sends activation URLs, try to lock an account and then try to reactivate it using that URL.
+
+* For every functionality that uses credentials (login, register, recover), try to send short/long values, numbers instead of strings, send the same parameter with different values at the same request and so on...
+
+* Try to use the parameters used after the authentication within the authentication process.
+
+* Change one byte of a session cookie at a time to check which part holds the session.
+
+* If the application uses HTTPS and contains HTTP links, check if session cookies are sent when requesting these.
+
+* For HTTP header injection, use these (also try to encode them). P.S: the response should contain a line return in case of a vulnerability:
+	- foo%00%0d%0abar
+	- foo%250d%250abar
+	- foo%%0d0d%%0a0abar
+
+* Try SMTP injection (in Contact Us or when sending an absence request) with these payloads (after checking the HTML form):
+	- <youremail>%0aCc:<youremail>
+	- <youremail>%0d%0aCc:<youremail>
+	- <youremail>%0aBcc:<youremail>
+	- <youremail>%0d%0aBcc:<youremail>
+	- %0aDATA%0afoo%0a%2e%0aMAIL+FROM:+<youremail>%0aRCPT+TO:+<youremail>
+	- %0aDATA%0aFrom:+<youremail>%0aTo:+<youremail>%0aSubject:+test%0afoo%0a%2e%0a
+	- %0d%0aDATA%0d%0afoo%0d%0a%2e%0d%0aMAIL+FROM:+<youremail>%0d%0aRCPT+TO:+<youremail>%0d%0aDATA%0d%0aFrom:+<youremail>%0d%0aTo:+<youremail>
+	- %0d%0aSubject:+test%0d%0afoo%0d%0a%2e%0d%0a
+
+* Try taking parameters that are submitted at one stage of the process and submitting them at a different stage and check if the relevant items are updated.
+Also, try to send a request without its parameters.
+
+* When the application offers an account recovery functionality, try to complete a part of the recovery then check if you can access an authenticated user-specific page.
+
+* Using both GET and CONNECT requests, attempt to connect to common port numbers on the web server itself by specifying 127.0.0.1 as the target host in the request.
+
+* Test Host header injection.
+
+* If a particular request is blocked, try submitting the same parameter in a different location or context. For instance, submit the same parameter in the URL in a GET request, within the body of a POST request, within the URL in a POST request and within the Cookie header (try also Referer, Authorization, another Host ... headers).
+
+* Check the HTML5 local storage. In source code, search for localStorage and sessionStorage.
