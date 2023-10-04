@@ -1,0 +1,12 @@
+* Try to send a request with Content-Length having a big value and another request with Content-Length smaller than the original. 
+Try to create a script that sends these requests multiple times and check the state of the application.
+
+* When testing a session cookie, try at each time to modify a portion (may be one character) at a time and see if the application does invalidate the token or not.
+
+* When trying to inject into a parameter and see its effect into the whole stage, try to look how to set a macro (a predefined sequence of one or more requests) in Burp.
+
+* When working with CAPTCHA, check if you can create a script that automates sending the request where the CAPTCHA is implemented. To bypass CAPTCHA, check if :
+	- The solution is located in the image tag name, or URL parameter,
+	- The solution is hidden in a comment, or a parameter 
+	- The application accepts the request without the CAPTCHA parameter,
+	- The application accepts all the other requests after setting the correct solution in the first request.
